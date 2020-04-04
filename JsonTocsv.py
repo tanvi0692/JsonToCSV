@@ -1,74 +1,53 @@
 import json 
 import csv
 import copy
+import pandas as pd
+import argparse
 
-# csv_dic=[]
-# with open('cbsd-information/output1.json') as f:
-#     data = json.load(f)
-#     data_dic = dict(data)
-#     print(data_dic.keys())
-    # for key in data:
-    #     if data[key] is dict:
 
-def getKeys(data,res_):
-    
-    
-  
-    if not isinstance(data,dict):
-        return ['']
-    
-    for key in data.keys():
-            temp = copy.deepcopy(getKeys(data[key],res_))
-            # print(temp)
-            for i, element in enumerate(temp):
-                # print(key+"."+ element)
-                temp[i]= key+"."+ element
 
-                print(res_,temp[i])
-                try:
-                    res_.remove(element)
-                except ValueError:
-                    pass
-                res_+=[temp[i]]  
 
-    return res_
-
-def getKeys_(data):
-    
-    
-  
+def getKeys_(data):  
     if not isinstance(data,dict):
         return ['']
     res_ = []
     for key in data.keys():
             temp = copy.deepcopy(getKeys_(data[key]))
-            # print(temp)
             for i, element in enumerate(temp):
-                # print(key+"."+ element)
-                temp[i]= key+"."+ element
+                if element == '':
+                    temp[i]= key
+                else:
+                    temp[i]= key+"."+ element
                 res_.append(temp[i])
-    
-
     return res_
     
-with open('cbsd-information/output1.json','r') as f:
-    data = json.load(f)
-
-keys = getKeys_(data['cbsdList'][0])
-print(keys)
-
-for item in keys:
-    key = item.split('.')
-    num = len(key) -1
-
-    n = 0
-    temp = data['cbsdList'][0]
+if __name__=='__main__':
+    parser = argparse.ArgumentParser(description='file-path')
+    parser.add_argument('-f', dest='filename', help='add file name')
+    res = parser.parse_args()
     
-    while n<=num-1:
+    
+     
+    with open('{}'.format(res.filename),'r') as f:
+        data = json.load(f)
 
-        temp = temp[key[n]]
-        n+=1
-    print(temp)
+    keyList = getKeys_(data["India"][0])
+    keyDict = {key: [] for key in keyList} 
+    for value in data["India"]:
+        for item in keyList:
+            key = item.split('.')
+            temp,num,n = value,len(key)-1, 0
+            while n<=num:
+                try:
+                    temp = temp[key[n]]
+                    n+=1
+                except KeyError:
+                    temp = None
+                    break
+            keyDict[item].append(temp)
+
+    df = pd.DataFrame(keyDict)
+    df.to_csv('{}.csv'.format(res.filename.split('.')[0]), sep='\t')
     
                      
             
